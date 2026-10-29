@@ -13,6 +13,7 @@ on:
       - 'tools/generate_use_case_coverage.py'
       - 'tools/validate_use_cases.py'
       - 'tools/test_validate_use_cases.py'
+  workflow_dispatch:
 
 jobs:
   coverage:
