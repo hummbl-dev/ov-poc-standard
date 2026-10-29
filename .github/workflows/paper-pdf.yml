@@ -16,12 +16,13 @@ on:
   pull_request:
     paths:
       - 'paper/**'
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -44,16 +45,26 @@ jobs:
         with:
           name: proof-of-control-paper
           path: paper/main.pdf
-      # Master is protected (LFDT repository rules reject direct pushes, the
-      # bot's included), so the fresh build is published as a release asset:
-      # a stable public download URL that CI refreshes on every merge.
-      - name: Publish the fresh PDF to the paper-latest release (master only)
-        if: github.event_name == 'push'
+  # Master is protected (LFDT repository rules reject direct pushes, the
+  # bot's included), so the fresh build is published as a release asset:
+  # a stable public download URL that CI refreshes on every merge.
+  publish:
+    needs: build
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        with:
+          name: proof-of-control-paper
+      - name: Publish the fresh PDF to the paper-latest release
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: |
           gh release view paper-latest >/dev/null 2>&1 || \
             gh release create paper-latest --title "Proof-of-Control paper - latest build" \
               --notes "Rebuilt by CI from master on every merge that touches the paper. Download main.pdf below." \
               --latest=false
-          gh release upload paper-latest paper/main.pdf --clobber
+          gh release upload paper-latest main.pdf --clobber

@@ -20,7 +20,7 @@ START, END = "<!-- coverage:start -->", "<!-- coverage:end -->"
 
 def vocabulary():
     vocab, meta, family = [], {}, None
-    for line in (HERE / "THREATS.md").read_text().splitlines():
+    for line in (HERE / "THREATS.md").read_text(encoding="utf-8").splitlines():
         if line.startswith("## "):
             family = line[3:].strip()
         m = re.match(r"\|\s*`([a-z0-9-]+)`\s*\|\s*([^|]+?)\s*\|", line)
@@ -35,7 +35,7 @@ def submissions():
     for f in sorted(HERE.rglob("*.md")):
         if f.name in SKIP:
             continue
-        text = f.read_text()
+        text = f.read_text(encoding="utf-8")
         match = re.match(r"\A\ufeff?---[ \t]*\n(.*?)\n---[ \t]*(?:\n|$)", text, re.S)
         fm = match.group(1) if match else ""
         tags, in_threats = [], False
@@ -105,7 +105,7 @@ def render(vocab, meta, used, by_case):
 
 
 def readme_with(summary):
-    text = (HERE / "README.md").read_text()
+    text = (HERE / "README.md").read_text(encoding="utf-8")
     if START in text and END in text:
         return re.sub(re.escape(START) + r".*?" + re.escape(END), summary, text, flags=re.S)
     return text.rstrip() + "\n\n" + summary + "\n"
@@ -125,9 +125,9 @@ def main():
     check = "--check" in sys.argv
 
     stale = []
-    if (HERE / "COVERAGE.md").read_text() != coverage if (HERE / "COVERAGE.md").exists() else True:
+    if (HERE / "COVERAGE.md").read_text(encoding="utf-8") != coverage if (HERE / "COVERAGE.md").exists() else True:
         stale.append("COVERAGE.md")
-    if (HERE / "README.md").read_text() != readme:
+    if (HERE / "README.md").read_text(encoding="utf-8") != readme:
         stale.append("README.md")
 
     if check:
@@ -138,8 +138,8 @@ def main():
         print(f"up to date: {len([s for s in vocab if used.get(s)])}/{len(vocab)} threats covered")
         return 0
 
-    (HERE / "COVERAGE.md").write_text(coverage)
-    (HERE / "README.md").write_text(readme)
+    (HERE / "COVERAGE.md").write_text(coverage, encoding="utf-8")
+    (HERE / "README.md").write_text(readme, encoding="utf-8")
     print(f"wrote COVERAGE.md and README.md: "
           f"{len([s for s in vocab if used.get(s)])}/{len(vocab)} threats covered, "
           f"{len(by_case)} use cases")
